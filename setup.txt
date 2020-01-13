@@ -1,0 +1,5 @@
+opencv-python
+keras
+tensorflow==1.15.0
+numpy
+imutils
