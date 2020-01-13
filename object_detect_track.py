@@ -54,7 +54,7 @@ input_w = 460
 laser_line = input_h - 50
 
 net = cv2.dnn.readNetFromCaffe(prototype_url, model_url)
-cap = cv2.VideoCapture(video_path)
+vid = cv2.VideoCapture(video_path)
 
 # Khoi tao tham so
 frame_count = 0
@@ -62,13 +62,13 @@ car_number = 0
 obj_cnt = 0
 curr_trackers = []
 
-while cap.isOpened():
+while vid.isOpened():
 
     laser_line_color = (0, 0, 255)
     boxes = []
 
     # Doc anh tu video
-    _, frame = cap.read()
+    _, frame = vid.read()
     if frame is None:
         break
 
@@ -140,12 +140,13 @@ while cap.isOpened():
     frame_count += 1
 
     # Hien thi so xe
-    text = " Car number: " + str(car_number)
-    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 2)
+
+    cv2.putText(frame, "Car number: " + str(car_number), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255 , 0), 2)
+    cv2.putText(frame, "Press Esc to quit", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
     # Draw laser line
     cv2.line(frame, (0, laser_line), (input_w, laser_line), laser_line_color, 2)
-    cv2.putText(frame, "Laser line", (10, laser_line - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, laser_line_color, 2)
+    cv2.putText(frame, "Laser line", (10, laser_line - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, laser_line_color, 2)
 
     # Frame
     cv2.imshow("Image", frame)
@@ -153,5 +154,5 @@ while cap.isOpened():
     if key == 27:
         break
 
-cap.release()
+vid.release()
 cv2.destroyAllWindows
