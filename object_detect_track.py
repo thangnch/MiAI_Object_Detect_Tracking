@@ -24,7 +24,7 @@ def get_object(net, image, conf_threshold=0.5, h=360, w=460):
 
     return image, boxes
 
-# Define cac tham soR
+# Define cac tham so
 
 prototype_url = 'models/MobileNetSSD_deploy.prototxt'
 model_url = 'models/MobileNetSSD_deploy.caffemodel'
@@ -39,7 +39,7 @@ laser_line = input_h - 50
 net = cv2.dnn.readNetFromCaffe(prototype_url, model_url)
 cap = cv2.VideoCapture(video_path)
 
-# define a box of Roid
+# Khoi tao tham so
 frame_count = 0
 car_number = 0
 obj_cnt = 0
