@@ -6,7 +6,7 @@ import math
 
 
 # Ham detect car và bus tu anh input
-def get_object(net, image, conf_threshold=0.5, H=360, W=460):
+def get_object(net, image, conf_threshold=0.5, h=360, w=460):
     blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 0.007843, (300, 300), 127.5)
     net.setInput(blob)
     detections = net.forward()
@@ -17,7 +17,7 @@ def get_object(net, image, conf_threshold=0.5, H=360, W=460):
         if confidence > conf_threshold:
             idx = int(detections[0, 0, i, 1])
             if CLASSES[idx] == 'car' or CLASSES[idx] == 'bus':
-                box = detections[0, 0, i, 3:7] * np.array([W, H, W, H])
+                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
                 box = [startX, startY, endX - startX, endY - startY]
                 boxes.append(box)
@@ -40,7 +40,7 @@ net = cv2.dnn.readNetFromCaffe(prototype_url, model_url)
 cap = cv2.VideoCapture(video_path)
 
 # define a box of Roid
-frame_number = 0
+frame_count = 0
 car_number = 0
 obj_cnt = 0
 trackers = []
@@ -95,7 +95,7 @@ while cap.isOpened():
             trackers.append(new_obj)
 
     # Thuc hien object detection moi 5 frame
-    if frame_number % 5 == 0:
+    if frame_count % 5 == 0:
         # Detect doi tuong
         frame, boxes_detected = get_object(net, frame)
 
@@ -103,16 +103,14 @@ while cap.isOpened():
             old_obj = False
 
             (xd, yd, wd, hd) = [int(v) for v in box_dt]
-            center_Xd = int((xd + (xd + wd)) / 2.0)
-            center_Yd = int((yd + (yd + hd)) / 2.0)
+            center_Xd , center_Yd =  int((xd + (xd + wd)) / 2.0), int((yd + (yd + hd)) / 2.0)
 
             if  center_Yd <= laser_line - max_distance:
 
                 # Duyet qua cac box, neu sai lech giua doi tuong detect voi doi tuong da track ko qua max_distance thi coi nhu 1 doi tuong
                 for box_tracker in boxes:
                     (xt, yt, wt, ht) = [int(c) for c in box_tracker]
-                    center_Xt = int((xt + (xt + wt)) / 2.0)
-                    center_Yt = int((yt + (yt + ht)) / 2.0)
+                    center_Xt, center_Yt = int((xt + (xt + wt)) / 2.0), int((yt + (yt + ht)) / 2.0)
                     distance = math.sqrt((center_Xt - center_Xd) ** 2 + (center_Yt - center_Yd) ** 2)
 
                     if distance < max_distance:
@@ -128,7 +126,6 @@ while cap.isOpened():
                     tracker = cv2.TrackerKCF_create()
 
                     obj_cnt += 1
-
                     new_obj = dict()
                     tracker.init(frame, tuple(box_dt))
                     new_obj['ID'] = obj_cnt
@@ -137,11 +134,11 @@ while cap.isOpened():
                     trackers.append(new_obj)
 
     # Tang frame
-    frame_number += 1
+    frame_count += 1
 
     # Hien thi so xe
     text = " Car number: " + "{:d}".format(car_number)
-    cv2.putText(frame, text, (10, input_h - ((1 * 20) + 300)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     # Draw laser line
     cv2.line(frame, (0, laser_line), (input_w, laser_line), laser_line_color, 2)
