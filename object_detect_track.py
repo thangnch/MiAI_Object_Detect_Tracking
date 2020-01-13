@@ -1,8 +1,7 @@
 import cv2
-import numpy as np
-import time
-import imutils
 import math
+import numpy as np
+
 
 
 # Ham detect car và bus tu anh input
