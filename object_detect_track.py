@@ -86,7 +86,7 @@ while cap.isOpened():
         boxes.append(box)
 
         new_obj = dict()
-        new_obj['ID'] = car['ID']
+        new_obj['tracker_id'] = car['tracker_id']
         new_obj['tracker'] = tracker
 
         # Tinh toan tam doi tuong
@@ -131,7 +131,7 @@ while cap.isOpened():
                     obj_cnt += 1
                     new_obj = dict()
                     tracker.init(frame, tuple(box))
-                    new_obj['ID'] = obj_cnt
+                    new_obj['tracker_id'] = obj_cnt
                     new_obj['tracker'] = tracker
 
                     curr_trackers.append(new_obj)
@@ -141,11 +141,11 @@ while cap.isOpened():
 
     # Hien thi so xe
     text = " Car number: " + "{:d}".format(car_number)
-    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 2)
 
     # Draw laser line
     cv2.line(frame, (0, laser_line), (input_w, laser_line), laser_line_color, 2)
-    cv2.putText(frame, "Laser line", (10, laser_line-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, laser_line_color, 2)
+    cv2.putText(frame, "Laser line", (10, laser_line-10), cv2.FONT_HERSHEY_COMPLEX, 0.5, laser_line_color, 2)
 
     # Frame
     cv2.imshow("Image", frame)
