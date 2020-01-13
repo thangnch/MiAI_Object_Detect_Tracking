@@ -21,7 +21,7 @@ def get_object(net, image, conf_threshold=0.5, h=360, w=460):
                 box = [startX, startY, endX - startX, endY - startY]
                 boxes.append(box)
 
-    return image, boxes
+    return boxes
 
 # Ham check xem old hay new
 def is_old(center_Xd,center_Yd,boxes):
@@ -110,7 +110,7 @@ while cap.isOpened():
     # Thuc hien object detection moi 5 frame
     if frame_count % 5 == 0:
         # Detect doi tuong
-        frame, boxes_d = get_object(net, frame)
+        boxes_d = get_object(net, frame)
 
         for box in boxes_d:
             old_obj = False
