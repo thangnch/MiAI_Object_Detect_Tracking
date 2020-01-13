@@ -24,6 +24,23 @@ def get_object(net, image, conf_threshold=0.5, h=360, w=460):
 
     return image, boxes
 
+# Ham check xem old hay new
+def is_old(center_Xd,center_Yd,boxes):
+    for box_tracker in boxes:
+        (xt, yt, wt, ht) = [int(c) for c in box_tracker]
+        center_Xt, center_Yt = int((xt + (xt + wt)) / 2.0), int((yt + (yt + ht)) / 2.0)
+        distance = math.sqrt((center_Xt - center_Xd) ** 2 + (center_Yt - center_Yd) ** 2)
+
+        if distance < max_distance:
+            return True
+    return False
+
+def get_box_info(box):
+    (x, y, w, h) = [int(v) for v in box]
+    center_X = int((x + (x + w)) / 2.0)
+    center_Y = int((y + (y + h)) / 2.0)
+    return x,y,w,h,center_X,center_Y
+
 # Define cac tham so
 
 prototype_url = 'models/MobileNetSSD_deploy.prototxt'
@@ -43,7 +60,7 @@ cap = cv2.VideoCapture(video_path)
 frame_count = 0
 car_number = 0
 obj_cnt = 0
-trackers = []
+curr_trackers = []
 
 while cap.isOpened():
 
@@ -59,25 +76,22 @@ while cap.isOpened():
     frame = cv2.resize(frame, (input_w, input_h))
 
     # Duyet qua cac doi tuong trong tracker
-    old_trackers = trackers
-    trackers = []
+    old_trackers = curr_trackers
+    curr_trackers = []
 
-    for obj in old_trackers:
+    for car in old_trackers:
 
         # Update tracker
-        tracker = obj['tracker']
-        (success, box) = tracker.update(frame)
+        tracker = car['tracker']
+        (_, box) = tracker.update(frame)
         boxes.append(box)
 
         new_obj = dict()
-        new_obj['ID'] = obj['ID']
+        new_obj['ID'] = car['ID']
         new_obj['tracker'] = tracker
 
-
         # Tinh toan tam doi tuong
-        (x, y, w, h) = [int(v) for v in box]
-        center_X = int((x + (x + w)) / 2.0)
-        center_Y = int((y + (y + h)) / 2.0)
+        x,y,w,h, center_X,center_Y = get_box_info(box)
 
         # Ve hinh chu nhat quanh doi tuong
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -92,46 +106,36 @@ while cap.isOpened():
             car_number += 1
         else:
             # Con khong thi track tiep
-            trackers.append(new_obj)
+            curr_trackers.append(new_obj)
 
     # Thuc hien object detection moi 5 frame
     if frame_count % 5 == 0:
         # Detect doi tuong
-        frame, boxes_detected = get_object(net, frame)
+        frame, boxes_d = get_object(net, frame)
 
-        for box_dt in boxes_detected:
+        for box in boxes_d:
             old_obj = False
 
-            (xd, yd, wd, hd) = [int(v) for v in box_dt]
-            center_Xd , center_Yd =  int((xd + (xd + wd)) / 2.0), int((yd + (yd + hd)) / 2.0)
+            xd, yd, wd, hd, center_Xd,center_Yd = get_box_info(box)
+
 
             if  center_Yd <= laser_line - max_distance:
 
                 # Duyet qua cac box, neu sai lech giua doi tuong detect voi doi tuong da track ko qua max_distance thi coi nhu 1 doi tuong
-                for box_tracker in boxes:
-                    (xt, yt, wt, ht) = [int(c) for c in box_tracker]
-                    center_Xt, center_Yt = int((xt + (xt + wt)) / 2.0), int((yt + (yt + ht)) / 2.0)
-                    distance = math.sqrt((center_Xt - center_Xd) ** 2 + (center_Yt - center_Yd) ** 2)
-
-                    if distance < max_distance:
-                        old_obj = True
-                        break
-
-                # Neu khong phai la doi tuong da track
-                if not old_obj:
+                if not is_old(center_Xd , center_Yd ,boxes):
 
                     cv2.rectangle(frame, (xd, yd), ((xd + wd), (yd + hd)), (0, 0, 255), 2)
                     # Tao doi tuong tracker moi
 
-                    tracker = cv2.TrackerKCF_create()
+                    tracker = cv2.TrackerMOSSE_create()
 
                     obj_cnt += 1
                     new_obj = dict()
-                    tracker.init(frame, tuple(box_dt))
+                    tracker.init(frame, tuple(box))
                     new_obj['ID'] = obj_cnt
                     new_obj['tracker'] = tracker
 
-                    trackers.append(new_obj)
+                    curr_trackers.append(new_obj)
 
     # Tang frame
     frame_count += 1
