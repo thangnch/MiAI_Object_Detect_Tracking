@@ -3,19 +3,18 @@ import math
 import numpy as np
 
 
-
 # Ham detect car và bus tu anh input
 def get_object(net, image, conf_threshold=0.5, h=360, w=460):
     blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)), 0.007843, (300, 300), 127.5)
     net.setInput(blob)
     detections = net.forward()
     boxes = []
-    CLASSES = ["_", "_", "_", "_", "_","_", "bus", "car", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"]
+
     for i in range(0, detections.shape[2]):
         confidence = detections[0, 0, i, 2]
         if confidence > conf_threshold:
             idx = int(detections[0, 0, i, 1])
-            if CLASSES[idx] == 'car' or CLASSES[idx] == 'bus':
+            if 6 <= idx <= 7:
                 box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
                 (startX, startY, endX, endY) = box.astype("int")
                 box = [startX, startY, endX - startX, endY - startY]
@@ -23,8 +22,9 @@ def get_object(net, image, conf_threshold=0.5, h=360, w=460):
 
     return boxes
 
+
 # Ham check xem old hay new
-def is_old(center_Xd,center_Yd,boxes):
+def is_old(center_Xd, center_Yd, boxes):
     for box_tracker in boxes:
         (xt, yt, wt, ht) = [int(c) for c in box_tracker]
         center_Xt, center_Yt = int((xt + (xt + wt)) / 2.0), int((yt + (yt + ht)) / 2.0)
@@ -34,18 +34,19 @@ def is_old(center_Xd,center_Yd,boxes):
             return True
     return False
 
+
 def get_box_info(box):
     (x, y, w, h) = [int(v) for v in box]
     center_X = int((x + (x + w)) / 2.0)
     center_Y = int((y + (y + h)) / 2.0)
-    return x,y,w,h,center_X,center_Y
+    return x, y, w, h, center_X, center_Y
+
 
 # Define cac tham so
 
 prototype_url = 'models/MobileNetSSD_deploy.prototxt'
 model_url = 'models/MobileNetSSD_deploy.caffemodel'
 video_path = 'test.mp4'
-
 
 max_distance = 50
 input_h = 360
@@ -90,7 +91,7 @@ while cap.isOpened():
         new_obj['tracker'] = tracker
 
         # Tinh toan tam doi tuong
-        x,y,w,h, center_X,center_Y = get_box_info(box)
+        x, y, w, h, center_X, center_Y = get_box_info(box)
 
         # Ve hinh chu nhat quanh doi tuong
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -115,15 +116,13 @@ while cap.isOpened():
         for box in boxes_d:
             old_obj = False
 
-            xd, yd, wd, hd, center_Xd,center_Yd = get_box_info(box)
+            xd, yd, wd, hd, center_Xd, center_Yd = get_box_info(box)
 
-
-            if  center_Yd <= laser_line - max_distance:
+            if center_Yd <= laser_line - max_distance:
 
                 # Duyet qua cac box, neu sai lech giua doi tuong detect voi doi tuong da track ko qua max_distance thi coi nhu 1 doi tuong
-                if not is_old(center_Xd , center_Yd ,boxes):
-
-                    cv2.rectangle(frame, (xd, yd), ((xd + wd), (yd + hd)), (0, 0, 255), 2)
+                if not is_old(center_Xd, center_Yd, boxes):
+                    cv2.rectangle(frame, (xd, yd), ((xd + wd), (yd + hd)), (0, 255, 255), 2)
                     # Tao doi tuong tracker moi
 
                     tracker = cv2.TrackerMOSSE_create()
@@ -131,6 +130,7 @@ while cap.isOpened():
                     obj_cnt += 1
                     new_obj = dict()
                     tracker.init(frame, tuple(box))
+
                     new_obj['tracker_id'] = obj_cnt
                     new_obj['tracker'] = tracker
 
@@ -140,17 +140,17 @@ while cap.isOpened():
     frame_count += 1
 
     # Hien thi so xe
-    text = " Car number: " + "{:d}".format(car_number)
+    text = " Car number: " + str(car_number)
     cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 2)
 
     # Draw laser line
     cv2.line(frame, (0, laser_line), (input_w, laser_line), laser_line_color, 2)
-    cv2.putText(frame, "Laser line", (10, laser_line-10), cv2.FONT_HERSHEY_COMPLEX, 0.5, laser_line_color, 2)
+    cv2.putText(frame, "Laser line", (10, laser_line - 10), cv2.FONT_HERSHEY_COMPLEX, 0.5, laser_line_color, 2)
 
     # Frame
     cv2.imshow("Image", frame)
     key = cv2.waitKey(1) & 0xFF
-    if key == ord('q'):
+    if key == 27:
         break
 
 cap.release()
